@@ -1,0 +1,13 @@
+[
+  {
+    "id": "skibidi_tualet",
+    "icon": "minecraft:iron_pickaxe"
+  },
+  {
+    "id": "debt_hunt",
+    "icon": "minecraft:iron_shovel",
+    "localisation": {
+      "42_eshkere": "Щовель"
+    }
+  }
+]

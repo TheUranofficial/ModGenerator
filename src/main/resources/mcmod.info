@@ -1,0 +1,16 @@
+[
+{
+  "modid": "generator",
+  "name": "Generator Mod",
+  "description": "Mod as a base for creating mods",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["TheUran"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

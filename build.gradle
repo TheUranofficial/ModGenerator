@@ -1,0 +1,211 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+version = '1.0'
+group = 'theuran.generator'
+archivesBaseName = 'generator'
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+minecraft {
+    mappings channel: 'snapshot', version: '20171003-1.12'
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            property 'forge.logging.console.level', 'debug'
+        }
+
+        server {
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            property 'forge.logging.console.level', 'debug'
+        }
+    }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+}
+
+jar {
+    manifest {
+        attributes([
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : project.version,
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')
+
+task prepareAssets(type: Copy) {
+    group = 'build'
+
+    inputs.property 'version', project.version
+    inputs.property 'mcversion', mcversion
+
+    project.version += "-" + mcversion
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        expand(project.properties)
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+
+    into project.file('build/classes/java/main')
+}
+
+classes.dependsOn(prepareAssets)
+
+tasks.withType(Jar).all { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
+
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+//nemnogo spizdil u mishorma)))
+task generateModResources {
+    def resourcesDir = file("src/main/resources/assets/${archivesBaseName}")
+    def entriesDir = new File(resourcesDir, "entries")
+    def texturesBlocksDir = new File(resourcesDir, "textures")
+    def blockentriesDir = new File(entriesDir, "block")
+    def blockstatesDir = new File(resourcesDir, "blockstates")
+    def modelsBlocksDir = new File(resourcesDir, "models/block")
+    def modelsItemsDir = new File(resourcesDir, "models/item")
+    def langDir = new File(resourcesDir, "lang")
+    def extraDir = new File(entriesDir, "extra")
+
+    inputs.dir(blockentriesDir)
+    outputs.dir(texturesBlocksDir)
+    outputs.dir(blockstatesDir)
+    outputs.dir(modelsBlocksDir)
+    outputs.dir(modelsItemsDir)
+    outputs.dir(langDir)
+    outputs.dir(extraDir)
+
+    doLast {
+        def fileNames = blockentriesDir.listFiles()
+                .findAll { it.isFile() && it.name != "index.json" }
+                .collect { it.name.replace(".json", "") }
+        def jsonFile = new File(extraDir, "blockIndex.json")
+        def itemGroupEntries = []
+        def blockEntries = []
+
+        texturesBlocksDir.mkdirs()
+        blockstatesDir.mkdirs()
+        modelsBlocksDir.mkdirs()
+        modelsItemsDir.mkdirs()
+        langDir.mkdirs()
+        extraDir.mkdirs()
+
+        jsonFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(fileNames))
+
+        blockentriesDir.listFiles().each { file ->
+            if (file.name.endsWith(".json")) {
+                def name = file.name.replace(".json", "")
+                def parsed = new JsonSlurper().parse(file)
+
+                blockEntries << [id: name, type: parsed["type"], localisation: parsed["localisation"]]
+            }
+        }
+
+        new JsonSlurper().parse(new File(extraDir, "itemGroup.json")).each { entry ->
+            itemGroupEntries << [id: entry.id, localisation: entry.localisation]
+        }
+
+        blockEntries.each { entry ->
+            if (entry.type.equals("base")) {
+                //BlockState
+                new File(blockstatesDir, "${entry.id}.json").text =
+                        JsonOutput.prettyPrint(
+                                JsonOutput.toJson(
+                                        [variants:
+                                                 [normal:
+                                                          [model: "${archivesBaseName}:${entry.id}"]]]))
+
+                //Block model
+                new File(modelsBlocksDir, "${entry.id}.json").text =
+                        JsonOutput.prettyPrint(
+                                JsonOutput.toJson(
+                                        [parent     : "block/cube_all",
+                                         textures   :
+                                                 [all: "${archivesBaseName}:${entry.id}"],
+                                         render_type: "Cutout"]))
+            }
+
+            //Item model
+            new File(modelsItemsDir, "${entry.id}.json").text =
+                    JsonOutput.prettyPrint(
+                            JsonOutput.toJson(
+                                    [parent: "${archivesBaseName}:block/${entry.id}"]))
+        }
+
+        //Lang
+        def languages = ["en_us"]
+        def entries = [blockEntries, itemGroupEntries]
+        def entriesLangValue = ["tile.%modid%.%id%.name",
+                                "itemGroup.%modid%.%id%"]
+
+        entries.each { entries2 ->
+            entries2.each { entry ->
+                if (entry.localisation != null) {
+                    entry.localisation.keySet().each { key ->
+                        if (languages.indexOf(key) == -1) {
+                            languages << (key as String)
+                        }
+                    }
+                }
+            }
+        }
+
+
+        languages.each { lang ->
+            def langFile = new File(langDir, lang + ".lang")
+
+            langFile.text = entries.collect { entries2 ->
+                entries2.collect { entry ->
+                    def entryLang = entriesLangValue[entries.indexOf(entries2)]
+
+                    if (entry.localisation != null && entry.localisation[lang] != null) {
+                        return "${entryLang.replace("%modid%", archivesBaseName).replace("%id%", entry.id)}=${entry.localisation[lang]}"
+                    } else if (lang == "en_us") {
+                        return "${entryLang.replace("%modid%", archivesBaseName).replace("%id%", entry.id)}=${entry.id.capitalize()}"
+                    }
+                    return null
+                }.findAll { it != null && !it.isEmpty() }.join("\n")
+            }.join("\n")
+        }
+
+        println "Resources has been generated"
+    }
+
+    classes.dependsOn(generateModResources)
+    processResources.dependsOn(generateModResources)
+
+    task sourcesJar(type: Jar) {
+        from sourceSets.main.allJava
+        classifier = 'sources'
+    }
+
+    artifacts {
+        archives sourcesJar
+    }
+}

@@ -1,0 +1,7 @@
+{
+    "parent": "block/cube_all",
+    "textures": {
+        "all": "generator:test"
+    },
+    "render_type": "Cutout"
+}
