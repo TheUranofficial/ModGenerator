@@ -132,23 +132,56 @@ task generateModResources {
         }
 
         blockEntries.each { entry ->
-            if (entry.type.equals("base")) {
+            def modelPath = "${archivesBaseName}:${entry.id}"
+            def modelFile = new File(modelsBlocksDir, "${entry.id}.json")
+
+            if (entry.type == "base") {
                 //BlockState
                 new File(blockstatesDir, "${entry.id}.json").text =
                         JsonOutput.prettyPrint(
                                 JsonOutput.toJson(
                                         [variants:
                                                  [normal:
-                                                          [model: "${archivesBaseName}:${entry.id}"]]]))
+                                                          [model: modelPath]
+                                                 ]
+                                        ]
+                                )
+                        )
 
                 //Block model
-                new File(modelsBlocksDir, "${entry.id}.json").text =
+                modelFile.text =
                         JsonOutput.prettyPrint(
                                 JsonOutput.toJson(
                                         [parent     : "block/cube_all",
                                          textures   :
-                                                 [all: "${archivesBaseName}:${entry.id}"],
-                                         render_type: "Cutout"]))
+                                                 [all: modelPath],
+                                         render_type: "Cutout"
+                                        ]
+                                )
+                        )
+            } else if (entry.type == "model") {
+                //Blockstate
+                new File(blockstatesDir, "${entry.id}.json").text =
+                        JsonOutput.prettyPrint(
+                                JsonOutput.toJson(
+                                        [variants:
+                                                 ["facing=north": [model: modelPath],
+                                                  "facing=east" : [model: modelPath, y: 90],
+                                                  "facing=south": [model: modelPath, y: 180],
+                                                  "facing=west" : [model: modelPath, y: 270]
+                                                 ]
+                                        ]
+                                )
+                        )
+
+                //Block model
+                def parsedModel = new JsonSlurper().parse(modelFile)
+
+                parsedModel["textures"]["0"] = modelPath
+                parsedModel["textures"]["particle"] = modelPath
+                parsedModel["render_type"] = "Cutout"
+
+                modelFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedModel))
             }
 
             //Item model

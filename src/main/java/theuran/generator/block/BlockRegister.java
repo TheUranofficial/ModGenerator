@@ -36,6 +36,8 @@ public class BlockRegister {
                     reader.close();
                     if (config.type.equals("base")) {
                         registerBase(fileName, config.lightLevel, config.tab);
+                    } else if (config.type.equals("model")) {
+                        registerModel(fileName, config.lightLevel, config.tab, config.isPassable, config.hasBox);
                     }
                 }
             }
@@ -46,5 +48,9 @@ public class BlockRegister {
 
     private static void registerBase(String id, float lightLevel, String tab) {
         blockMap.put(id, new BaseBlock(id, lightLevel, tab));
+    }
+
+    private static void registerModel(String id, float lightLevel, String tab, boolean isPassable, boolean hasBox) {
+        blockMap.put(id, new ModelBlock(id, lightLevel, tab, isPassable, hasBox));
     }
 }

@@ -1,4 +1,2 @@
-tile.generator.test.name=Test
-tile.generator.test_light.name=Test_light
-itemGroup.generator.skibidi_tualet=Skibidi_tualet
-itemGroup.generator.debt_hunt=Debt_hunt
+
+itemGroup.generator.default=Default
