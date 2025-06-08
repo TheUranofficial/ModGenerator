@@ -41,8 +41,8 @@ public class ModelBlock extends BaseBlock {
                 double minX = 16, minY = 16, minZ = 16;
                 double maxX = 0, maxY = 0, maxZ = 0;
 
-                for (JsonElement elem : json.getAsJsonArray("elements")) {
-                    JsonObject cube = elem.getAsJsonObject();
+                for (JsonElement element : json.getAsJsonArray("elements")) {
+                    JsonObject cube = element.getAsJsonObject();
                     JsonArray from = cube.getAsJsonArray("from");
                     JsonArray to = cube.getAsJsonArray("to");
 

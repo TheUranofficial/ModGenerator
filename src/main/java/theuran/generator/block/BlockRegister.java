@@ -34,6 +34,7 @@ public class BlockRegister {
 
                     stream.close();
                     reader.close();
+
                     if (config.type.equals("base")) {
                         registerBase(fileName, config.lightLevel, config.tab);
                     } else if (config.type.equals("model")) {

@@ -86,14 +86,16 @@ task generateModResources {
     def resourcesDir = file("src/main/resources/assets/${archivesBaseName}")
     def entriesDir = new File(resourcesDir, "entries")
     def texturesBlocksDir = new File(resourcesDir, "textures")
-    def blockentriesDir = new File(entriesDir, "block")
+    def blockEntriesDir = new File(entriesDir, "block")
+    def itemEntriesDir = new File(entriesDir, "item")
     def blockstatesDir = new File(resourcesDir, "blockstates")
     def modelsBlocksDir = new File(resourcesDir, "models/block")
     def modelsItemsDir = new File(resourcesDir, "models/item")
     def langDir = new File(resourcesDir, "lang")
     def extraDir = new File(entriesDir, "extra")
 
-    inputs.dir(blockentriesDir)
+    inputs.dir(blockEntriesDir)
+    inputs.dir(itemEntriesDir)
     outputs.dir(texturesBlocksDir)
     outputs.dir(blockstatesDir)
     outputs.dir(modelsBlocksDir)
@@ -102,11 +104,9 @@ task generateModResources {
     outputs.dir(extraDir)
 
     doLast {
-        def fileNames = blockentriesDir.listFiles()
-                .findAll { it.isFile() && it.name != "index.json" }
-                .collect { it.name.replace(".json", "") }
-        def jsonFile = new File(extraDir, "blockIndex.json")
+        def indexFiles = ["block", "item"]
         def itemGroupEntries = []
+        def itemEntries = []
         def blockEntries = []
 
         texturesBlocksDir.mkdirs()
@@ -116,14 +116,28 @@ task generateModResources {
         langDir.mkdirs()
         extraDir.mkdirs()
 
-        jsonFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(fileNames))
+        indexFiles.each { index ->
+            new File(extraDir, "${index}Index.json").text = JsonOutput.prettyPrint(
+                    JsonOutput.toJson(
+                            new File(entriesDir, index).listFiles()
+                                    .findAll { it.isFile() }
+                                    .collect { it.name.replace(".json", "") }
+                    )
+            )
+        }
 
-        blockentriesDir.listFiles().each { file ->
-            if (file.name.endsWith(".json")) {
-                def name = file.name.replace(".json", "")
-                def parsed = new JsonSlurper().parse(file)
+        [blockEntriesDir, itemEntriesDir].each { dir ->
+            dir.listFiles().each { file ->
+                if (file.name.endsWith(".json")) {
+                    def name = file.name.replace(".json", "")
+                    def parsed = new JsonSlurper().parse(file)
 
-                blockEntries << [id: name, type: parsed["type"], localisation: parsed["localisation"]]
+                    if (dir == blockEntriesDir) {
+                        blockEntries << [id: name, type: parsed["type"], localisation: parsed["localisation"]]
+                    } else if (dir == itemEntriesDir) {
+                        itemEntries << [id: name, localisation: parsed["localisation"]]
+                    }
+                }
             }
         }
 
@@ -139,62 +153,104 @@ task generateModResources {
                 //BlockState
                 new File(blockstatesDir, "${entry.id}.json").text =
                         JsonOutput.prettyPrint(
-                                JsonOutput.toJson(
-                                        [variants:
-                                                 [normal:
-                                                          [model: modelPath]
-                                                 ]
+                                JsonOutput.toJson([
+                                        variants: [
+                                                normal: [
+                                                        model: modelPath
+                                                ]
                                         ]
-                                )
+                                ])
                         )
 
                 //Block model
                 modelFile.text =
                         JsonOutput.prettyPrint(
-                                JsonOutput.toJson(
-                                        [parent     : "block/cube_all",
-                                         textures   :
-                                                 [all: modelPath],
-                                         render_type: "Cutout"
-                                        ]
-                                )
+                                JsonOutput.toJson([
+                                        parent     : "block/cube_all",
+                                        textures   :
+                                                [
+                                                        all     : modelPath,
+                                                        particle: modelPath
+                                                ],
+                                        render_type: "Cutout"
+                                ])
                         )
             } else if (entry.type == "model") {
                 //Blockstate
                 new File(blockstatesDir, "${entry.id}.json").text =
                         JsonOutput.prettyPrint(
-                                JsonOutput.toJson(
-                                        [variants:
-                                                 ["facing=north": [model: modelPath],
-                                                  "facing=east" : [model: modelPath, y: 90],
-                                                  "facing=south": [model: modelPath, y: 180],
-                                                  "facing=west" : [model: modelPath, y: 270]
-                                                 ]
+                                JsonOutput.toJson([
+                                        variants: [
+                                                "facing=north": [
+                                                        model: modelPath
+                                                ],
+                                                "facing=east" : [
+                                                        model: modelPath,
+                                                        y    : 90
+                                                ],
+                                                "facing=south": [
+                                                        model: modelPath,
+                                                        y    : 180
+                                                ],
+                                                "facing=west" : [
+                                                        model: modelPath,
+                                                        y    : 270
+                                                ]
                                         ]
-                                )
+                                ])
                         )
 
                 //Block model
-                def parsedModel = new JsonSlurper().parse(modelFile)
+                if (modelFile.exists()) {
+                    def parsedModel = new JsonSlurper().parse(modelFile)
 
-                parsedModel["textures"]["0"] = modelPath
-                parsedModel["textures"]["particle"] = modelPath
-                parsedModel["render_type"] = "Cutout"
+                    parsedModel["textures"]["0"] = modelPath
+                    parsedModel["textures"]["particle"] = modelPath
+                    parsedModel["render_type"] = "Cutout"
 
-                modelFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedModel))
+                    modelFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedModel))
+                }
             }
 
             //Item model
             new File(modelsItemsDir, "${entry.id}.json").text =
                     JsonOutput.prettyPrint(
-                            JsonOutput.toJson(
-                                    [parent: "${archivesBaseName}:block/${entry.id}"]))
+                            JsonOutput.toJson([
+                                    parent: "${archivesBaseName}:block/${entry.id}"
+                            ])
+                    )
+        }
+
+        itemEntries.each { entry ->
+            def itemModel = new File(modelsItemsDir, "${entry.id}.json")
+
+            if (!itemModel.exists()) {
+                itemModel.text = JsonOutput.prettyPrint(
+                        JsonOutput.toJson([
+                                "parent"  : "item/generated",
+                                "textures": [
+                                        "layer0": "${archivesBaseName}:${entry.id}"
+                                ]
+                        ])
+                )
+            } else {
+                def parsed = new JsonSlurper().parse(itemModel)
+
+                parsed["textures"] = [
+                        "1": "${archivesBaseName}:${entry.id}"
+                ]
+
+                itemModel.text = JsonOutput.prettyPrint(
+                        JsonOutput.toJson(parsed)
+                )
+            }
         }
 
         //Lang
         def languages = ["en_us"]
-        def entries = [blockEntries, itemGroupEntries]
+        def entries = [blockEntries, itemEntries, itemGroupEntries]
         def entriesLangValue = ["tile.%modid%.%id%.name",
+                                "item.%modid%.%id%.name",
                                 "itemGroup.%modid%.%id%"]
 
         entries.each { entries2 ->
