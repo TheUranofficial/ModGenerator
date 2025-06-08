@@ -133,7 +133,7 @@ task generateModResources {
                     def parsed = new JsonSlurper().parse(file)
 
                     if (dir == blockEntriesDir) {
-                        blockEntries << [id: name, type: parsed["type"], localisation: parsed["localisation"]]
+                        blockEntries << [id: name, type: parsed["type"], localisation: parsed["localisation"], randomRotation: parsed["randomRotation"]]
                     } else if (dir == itemEntriesDir) {
                         itemEntries << [id: name, localisation: parsed["localisation"]]
                     }
@@ -150,31 +150,43 @@ task generateModResources {
             def modelFile = new File(modelsBlocksDir, "${entry.id}.json")
 
             if (entry.type == "base") {
+                def normalMap = [
+                        model: modelPath
+                ]
+
+                //Block model
+                modelFile.text = JsonOutput.prettyPrint(
+                        JsonOutput.toJson([
+                                parent     : "block/cube_all",
+                                textures   : [
+                                        all     : modelPath,
+                                        particle: modelPath
+                                ],
+                                render_type: "Cutout"
+                        ])
+                )
+
+                if (entry.randomRotation) {
+                    normalMap = [
+                            [model: modelPath],
+                            [model: modelPath, y: 180],
+                            [model: "${archivesBaseName}:${entry.id}_mirrored"],
+                            [model: "${archivesBaseName}:${entry.id}_mirrored", y: 180]
+                    ]
+
+                    new File(modelsBlocksDir, "${entry.id}_mirrored.json").text = modelFile.text.replace("block/cube_all", "block/cube_mirrored_all")
+                }
+
                 //BlockState
                 new File(blockstatesDir, "${entry.id}.json").text =
                         JsonOutput.prettyPrint(
                                 JsonOutput.toJson([
                                         variants: [
-                                                normal: [
-                                                        model: modelPath
-                                                ]
+                                                normal: normalMap
                                         ]
                                 ])
                         )
 
-                //Block model
-                modelFile.text =
-                        JsonOutput.prettyPrint(
-                                JsonOutput.toJson([
-                                        parent     : "block/cube_all",
-                                        textures   :
-                                                [
-                                                        all     : modelPath,
-                                                        particle: modelPath
-                                                ],
-                                        render_type: "Cutout"
-                                ])
-                        )
             } else if (entry.type == "model") {
                 //Blockstate
                 new File(blockstatesDir, "${entry.id}.json").text =
