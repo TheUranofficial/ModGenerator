@@ -9,8 +9,6 @@ buildscript {
 }
 
 apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
 
 version = '1.0'
 group = 'theuran.generator'
@@ -169,8 +167,8 @@ task generateModResources {
                 if (entry.randomRotation) {
                     normalMap = [
                             [model: modelPath],
-                            [model: modelPath, y: 180],
                             [model: "${archivesBaseName}:${entry.id}_mirrored"],
+                            [model: modelPath, y: 180],
                             [model: "${archivesBaseName}:${entry.id}_mirrored", y: 180]
                     ]
 
