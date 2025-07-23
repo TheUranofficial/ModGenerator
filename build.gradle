@@ -9,8 +9,6 @@ buildscript {
 }
 
 apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
 
 version = '1.0'
 group = 'theuran.generator'
@@ -161,16 +159,15 @@ task generateModResources {
                                 textures   : [
                                         all     : modelPath,
                                         particle: modelPath
-                                ],
-                                render_type: "Cutout"
+                                ]
                         ])
                 )
 
                 if (entry.randomRotation) {
                     normalMap = [
                             [model: modelPath],
-                            [model: modelPath, y: 180],
                             [model: "${archivesBaseName}:${entry.id}_mirrored"],
+                            [model: modelPath, y: 180],
                             [model: "${archivesBaseName}:${entry.id}_mirrored", y: 180]
                     ]
 
@@ -216,9 +213,13 @@ task generateModResources {
                 if (modelFile.exists()) {
                     def parsedModel = new JsonSlurper().parse(modelFile)
 
-                    parsedModel["textures"]["0"] = modelPath
+                    parsedModel["textures"].each {
+                        if (it.getKey().isNumber()) {
+                            it = modelPath
+                        }
+                    }
+
                     parsedModel["textures"]["particle"] = modelPath
-                    parsedModel["render_type"] = "Cutout"
 
                     modelFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(parsedModel))
                 }
