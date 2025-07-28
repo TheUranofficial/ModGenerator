@@ -131,7 +131,7 @@ task generateModResources {
                     def parsed = new JsonSlurper().parse(file)
 
                     if (dir == blockEntriesDir) {
-                        blockEntries << [id: name, type: parsed["type"], localisation: parsed["localisation"], randomRotation: parsed["randomRotation"]]
+                        blockEntries << [id: name, type: parsed["type"], localisation: parsed["localisation"], randomRotation: parsed["randomRotation"], customTexturePath: parsed["customTexturePath"]]
                     } else if (dir == itemEntriesDir) {
                         itemEntries << [id: name, localisation: parsed["localisation"]]
                     }
@@ -210,12 +210,12 @@ task generateModResources {
                         )
 
                 //Block model
-                if (modelFile.exists()) {
+                if (modelFile.exists() && !entry.customTexturePath) {
                     def parsedModel = new JsonSlurper().parse(modelFile)
 
                     parsedModel["textures"].each {
                         if (it.getKey().isNumber()) {
-                            it = modelPath
+                            parsedModel["textures"][it.getKey()] = modelPath
                         }
                     }
 
