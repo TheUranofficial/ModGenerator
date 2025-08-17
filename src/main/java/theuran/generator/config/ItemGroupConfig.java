@@ -18,7 +18,7 @@ public class ItemGroupConfig {
     }
 
     public void addToCreativeTabMap(Map<String, CreativeTabs> map, String idInMap) {
-        map.put(idInMap, new CreativeTabs(ModGenerator.MODID + "." + this.id) {
+        map.put(idInMap, new CreativeTabs(ModGenerator.modId + "." + this.id) {
             @Override
             public ItemStack getTabIconItem() {
                 return new ItemStack(Item.REGISTRY.getObject(new ResourceLocation(ItemGroupConfig.this.icon)));

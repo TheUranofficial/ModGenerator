@@ -8,7 +8,7 @@ public class BaseItem extends Item {
     public BaseItem(String id, String tab, int maxStackSize) {
         this.setCreativeTab(tab == null ? ModGenerator.creativeTabs.get("main") : ModGenerator.creativeTabs.get(tab));
         this.setMaxStackSize(maxStackSize);
-        this.setRegistryName(new ResourceLocation(ModGenerator.MODID, id));
-        this.setUnlocalizedName(ModGenerator.MODID + "." + id);
+        this.setRegistryName(new ResourceLocation(ModGenerator.modId, id));
+        this.setUnlocalizedName(ModGenerator.modId + "." + id);
     }
 }

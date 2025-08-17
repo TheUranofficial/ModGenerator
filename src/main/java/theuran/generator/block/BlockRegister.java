@@ -19,7 +19,7 @@ public class BlockRegister {
         try {
             List<String> fileNames;
 
-            try (InputStream stream = BlockRegister.class.getClassLoader().getResourceAsStream("assets/" + ModGenerator.MODID + "/entries/extra/blockIndex.json")) {
+            try (InputStream stream = BlockRegister.class.getClassLoader().getResourceAsStream("assets/" + ModGenerator.modId + "/entries/extra/blockIndex.json")) {
                 InputStreamReader reader = new InputStreamReader(stream);
 
                 fileNames = gson.fromJson(reader, new TypeToken<List<String>>() {}.getType());
@@ -28,7 +28,7 @@ public class BlockRegister {
             }
 
             for (String fileName : fileNames) {
-                try (InputStream stream = BlockRegister.class.getClassLoader().getResourceAsStream("assets/" + ModGenerator.MODID + "/entries/block/" + fileName + ".json")) {
+                try (InputStream stream = BlockRegister.class.getClassLoader().getResourceAsStream("assets/" + ModGenerator.modId + "/entries/block/" + fileName + ".json")) {
                     InputStreamReader reader = new InputStreamReader(stream);
                     BlockConfig config = gson.fromJson(reader, BlockConfig.class);
 
@@ -39,6 +39,8 @@ public class BlockRegister {
                         registerBase(fileName, config.lightLevel, config.tab);
                     } else if (config.type.equals("model")) {
                         registerModel(fileName, config.lightLevel, config.tab, config.isPassable, config.hasBox);
+                    } else if (config.type.equals("gecko")) {
+                        registerGecko(fileName, config.lightLevel, config.tab, config.isPassable);
                     }
                 }
             }
@@ -53,5 +55,9 @@ public class BlockRegister {
 
     private static void registerModel(String id, float lightLevel, String tab, boolean isPassable, boolean hasBox) {
         blockMap.put(id, new ModelBlock(id, lightLevel, tab, isPassable, hasBox));
+    }
+
+    private static void registerGecko(String id, float lightLevel, String tab, boolean isPassable) {
+        blockMap.put(id, new GeckoBlock(id, lightLevel, tab, isPassable));
     }
 }
