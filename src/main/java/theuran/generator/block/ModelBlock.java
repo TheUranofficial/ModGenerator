@@ -30,7 +30,7 @@ public class ModelBlock extends BaseBlock {
         if (hasBox) {
             //opyat spasibo mishormiku za kod nizhe napisanniy
             try {
-                InputStream stream = this.getClass().getClassLoader().getResourceAsStream("assets/" + ModGenerator.MODID + "/models/block/" + id + ".json");
+                InputStream stream = this.getClass().getClassLoader().getResourceAsStream("assets/" + ModGenerator.modId + "/models/block/" + id + ".json");
                 InputStreamReader reader = new InputStreamReader(stream);
 
                 JsonObject json = new JsonParser().parse(reader).getAsJsonObject();

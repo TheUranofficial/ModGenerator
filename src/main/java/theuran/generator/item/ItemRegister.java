@@ -21,7 +21,7 @@ public class ItemRegister {
         try {
             List<String> fileNames;
 
-            try (InputStream stream = ItemRegister.class.getClassLoader().getResourceAsStream("assets/" + ModGenerator.MODID + "/entries/extra/itemIndex.json")) {
+            try (InputStream stream = ItemRegister.class.getClassLoader().getResourceAsStream("assets/" + ModGenerator.modId + "/entries/extra/itemIndex.json")) {
                 InputStreamReader reader = new InputStreamReader(stream);
 
                 fileNames = gson.fromJson(reader, new TypeToken<List<String>>() {}.getType());
@@ -30,7 +30,7 @@ public class ItemRegister {
             }
 
             for (String fileName : fileNames) {
-                try (InputStream stream = ItemRegister.class.getClassLoader().getResourceAsStream("assets/" + ModGenerator.MODID + "/entries/item/" + fileName + ".json")) {
+                try (InputStream stream = ItemRegister.class.getClassLoader().getResourceAsStream("assets/" + ModGenerator.modId + "/entries/item/" + fileName + ".json")) {
                     InputStreamReader reader = new InputStreamReader(stream);
                     ItemConfig config = gson.fromJson(reader, ItemConfig.class);
 
