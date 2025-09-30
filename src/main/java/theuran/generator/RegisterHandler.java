@@ -12,6 +12,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import theuran.generator.block.BlockRegister;
+import theuran.generator.block.GeckoBlock;
 import theuran.generator.item.ItemRegister;
 
 public class RegisterHandler {
@@ -26,8 +27,8 @@ public class RegisterHandler {
     public void onItemsRegister(RegistryEvent.Register<Item> event) {
         BlockRegister.blockMap.forEach((id, instance) -> {
             event.getRegistry().register(new ItemBlock(instance)
-                    .setRegistryName(new ResourceLocation(ModGenerator.MODID, id))
-                    .setUnlocalizedName(ModGenerator.MODID + "." + id));
+                    .setRegistryName(new ResourceLocation(ModGenerator.modId, id))
+                    .setUnlocalizedName(ModGenerator.modId + "." + id));
         });
         ItemRegister.itemMap.forEach((id, instance) -> {
             event.getRegistry().register(instance);
@@ -38,21 +39,23 @@ public class RegisterHandler {
     @SideOnly(Side.CLIENT)
     public void onModelsRegister(ModelRegistryEvent event) {
         BlockRegister.blockMap.forEach((id, instance) -> {
-            ModelLoader.setCustomModelResourceLocation(
-                    Item.getItemFromBlock(instance),
-                    0,
-                    new ModelResourceLocation(
-                            ModGenerator.MODID + ":" + id,
-                            "inventory"
-                    )
-            );
+            if (!(instance instanceof GeckoBlock)) {
+                ModelLoader.setCustomModelResourceLocation(
+                        Item.getItemFromBlock(instance),
+                        0,
+                        new ModelResourceLocation(
+                                ModGenerator.modId + ":" + id,
+                                "inventory"
+                        )
+                );
+            }
         });
         ItemRegister.itemMap.forEach((id, instance) -> {
             ModelLoader.setCustomModelResourceLocation(
                     instance,
                     0,
                     new ModelResourceLocation(
-                            ModGenerator.MODID + ":" + id,
+                            ModGenerator.modId + ":" + id,
                             "inventory"
                     )
             );

@@ -2,6 +2,7 @@ buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net/' }
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
@@ -38,6 +39,9 @@ minecraft {
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+
+    //Duct taped
+    compileOnly files("run/libs/geckolib-forge-1.12.2-3.0.31.jar")
 }
 
 jar {
@@ -87,6 +91,8 @@ task generateModResources {
     def blockEntriesDir = new File(entriesDir, "block")
     def itemEntriesDir = new File(entriesDir, "item")
     def blockstatesDir = new File(resourcesDir, "blockstates")
+    def geosDir = new File(resourcesDir, "geo")
+    def animationsDir = new File(resourcesDir, "animations")
     def modelsBlocksDir = new File(resourcesDir, "models/block")
     def modelsItemsDir = new File(resourcesDir, "models/item")
     def langDir = new File(resourcesDir, "lang")
@@ -96,6 +102,8 @@ task generateModResources {
     inputs.dir(itemEntriesDir)
     outputs.dir(texturesBlocksDir)
     outputs.dir(blockstatesDir)
+    outputs.dir(geosDir)
+    outputs.dir(animationsDir)
     outputs.dir(modelsBlocksDir)
     outputs.dir(modelsItemsDir)
     outputs.dir(langDir)
@@ -109,6 +117,8 @@ task generateModResources {
 
         texturesBlocksDir.mkdirs()
         blockstatesDir.mkdirs()
+        geosDir.mkdirs()
+        animationsDir.mkdirs()
         modelsBlocksDir.mkdirs()
         modelsItemsDir.mkdirs()
         langDir.mkdirs()
@@ -184,7 +194,7 @@ task generateModResources {
                                 ])
                         )
 
-            } else if (entry.type == "model") {
+            } else if (entry.type == "model" || entry.type == "gecko") {
                 //Blockstate
                 new File(blockstatesDir, "${entry.id}.json").text =
                         JsonOutput.prettyPrint(

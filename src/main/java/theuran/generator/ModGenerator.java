@@ -17,13 +17,18 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-@Mod(modid = ModGenerator.MODID, name = ModGenerator.NAME, version = ModGenerator.VERSION)
+@Mod(
+        modid = ModGenerator.modId,
+        name = ModGenerator.name,
+        version = ModGenerator.version,
+        dependencies = "required-after:geckolib3@[3.0.30,)"
+)
 public class ModGenerator {
-    public static final String MODID = "generator";
-    public static final String NAME = "Mod Generator";
-    public static final String VERSION = "1.0";
+    public static final String modId = "generator";
+    public static final String name = "Mod Generator";
+    public static final String version = "1.0";
 
-    @SidedProxy(clientSide = "theuran." + MODID + ".ClientProxy", serverSide = "theuran." + MODID + ".CommonProxy")
+    @SidedProxy(clientSide = "theuran." + modId + ".ClientProxy", serverSide = "theuran." + modId + ".CommonProxy")
     public static CommonProxy proxy;
 
     public static Map<String, CreativeTabs> creativeTabs = new HashMap<>();
@@ -51,7 +56,7 @@ public class ModGenerator {
         Gson gson = new Gson();
         ItemGroupConfig[] configs;
 
-        try (InputStream stream = ModGenerator.class.getClassLoader().getResourceAsStream("assets/" + MODID + "/entries/extra/itemGroup.json")) {
+        try (InputStream stream = ModGenerator.class.getClassLoader().getResourceAsStream("assets/" + modId + "/entries/extra/itemGroup.json")) {
             if (stream == null) throw new IOException("itemGroup.json not found");
             try (InputStreamReader reader = new InputStreamReader(stream)) {
                 configs = gson.fromJson(reader, ItemGroupConfig[].class);
